@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9026b74a5a74990f11ce259aa417b2a4",
+    "content-hash": "d3ea310bf7d7f33f33d6c85e55cc431c",
     "packages": [
         {
             "name": "brick/math",
@@ -501,6 +501,114 @@
             "time": "2021-09-03T12:13:28+00:00"
         },
         {
+            "name": "fisharebest/collection",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://codeberg.org/fisharebest/collection.git",
+                "reference": "d13f1a705d431bfcd799f2f1647eecf16f9cb924"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://codeberg.org/api/v1/repos/fisharebest/collection/archive/d13f1a705d431bfcd799f2f1647eecf16f9cb924.zip",
+                "reference": "d13f1a705d431bfcd799f2f1647eecf16f9cb924",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "ext-pcov": "*",
+                "infection/infection": "^0.34",
+                "phpstan/phpstan": "^2.2",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^12.5|^13.3",
+                "squizlabs/php_codesniffer": "^4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Collection\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Greg Roach",
+                    "email": "greg@subaqua.co.uk"
+                }
+            ],
+            "description": "Collection-type objects for lists and maps.",
+            "support": {
+                "issues": "https://codeberg.org/fisharebest/collection/issues",
+                "source": "https://codeberg.org/fisharebest/collection/branch/main"
+            },
+            "time": "2026-10-16T05:04:33+00:00"
+        },
+        {
+            "name": "fisharebest/database",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://codeberg.org/fisharebest/database.git",
+                "reference": "98ef846ddf60bd2d5df16db65e7e1f321ccdfdd8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://codeberg.org/api/v1/repos/fisharebest/database/archive/98ef846ddf60bd2d5df16db65e7e1f321ccdfdd8.zip",
+                "reference": "98ef846ddf60bd2d5df16db65e7e1f321ccdfdd8",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pdo": "*",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "ext-pcov": "*",
+                "ext-pdo_firebird": "*",
+                "ext-pdo_mysql": "*",
+                "ext-pdo_pgsql": "*",
+                "ext-pdo_sqlite": "*",
+                "ext-pdo_sqlsrv": "*",
+                "infection/infection": "^0.34",
+                "phpstan/phpstan": "^2.2",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpcov": "^11.0|^13.1",
+                "phpunit/phpunit": "^12.5|^13.3",
+                "squizlabs/php_codesniffer": "^4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "compatibility/SortDirection.php"
+                ],
+                "psr-4": {
+                    "Fisharebest\\Database\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Greg Roach",
+                    "email": "greg@subaqua.co.uk"
+                }
+            ],
+            "description": "Database abstraction layer",
+            "support": {
+                "issues": "https://codeberg.org/fisharebest/database/issues",
+                "source": "https://codeberg.org/fisharebest/database/branch/main"
+            },
+            "time": "2026-10-16T14:58:45+00:00"
+        },
+        {
             "name": "fisharebest/ext-calendar",
             "version": "2.6.0",
             "source": {
@@ -571,7 +679,7 @@
         },
         {
             "name": "illuminate/collections",
-            "version": "v13.36.0",
+            "version": "v13.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/collections.git",
@@ -631,7 +739,7 @@
         },
         {
             "name": "illuminate/conditionable",
-            "version": "v13.36.0",
+            "version": "v13.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/conditionable.git",
@@ -677,16 +785,16 @@
         },
         {
             "name": "illuminate/container",
-            "version": "v13.36.0",
+            "version": "v13.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/container.git",
-                "reference": "d0e4c96781b2a231361b6cf901da8b8d15212455"
+                "reference": "573f22dcaeec1748a57d4f47b4e7147845a5112a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/container/zipball/d0e4c96781b2a231361b6cf901da8b8d15212455",
-                "reference": "d0e4c96781b2a231361b6cf901da8b8d15212455",
+                "url": "https://api.github.com/repos/illuminate/container/zipball/573f22dcaeec1748a57d4f47b4e7147845a5112a",
+                "reference": "573f22dcaeec1748a57d4f47b4e7147845a5112a",
                 "shasum": ""
             },
             "require": {
@@ -735,11 +843,11 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2026-10-06T02:42:44+00:00"
+            "time": "2026-10-13T13:06:12+00:00"
         },
         {
             "name": "illuminate/contracts",
-            "version": "v13.36.0",
+            "version": "v13.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
@@ -861,7 +969,7 @@
         },
         {
             "name": "illuminate/macroable",
-            "version": "v13.36.0",
+            "version": "v13.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/macroable.git",
@@ -907,7 +1015,7 @@
         },
         {
             "name": "illuminate/reflection",
-            "version": "v13.36.0",
+            "version": "v13.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/reflection.git",
@@ -9128,7 +9236,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "fisharebest/collection": 20,
+        "fisharebest/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

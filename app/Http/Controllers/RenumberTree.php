@@ -96,79 +96,71 @@ final class RenumberTree
             $new_xref = Registry::xrefFactory()->make($type);
             switch ($type) {
                 case Individual::RECORD_TYPE:
-                    DB::table('individuals')
-                        ->where('i_file', '=', $tree->id())
-                        ->where('i_id', '=', $old_xref)
+                    DB::query(table: 'individuals')
+                        ->whereEqual('i_file', $tree->id())
+                        ->whereEqual('i_id', $old_xref)
                         ->update([
                             'i_id'     => $new_xref,
                             'i_gedcom' => new Expression("REPLACE(i_gedcom, '0 @$old_xref@ INDI', '0 @$new_xref@ INDI')"),
                         ]);
 
-                    DB::table('families')
-                        ->where('f_husb', '=', $old_xref)
-                        ->where('f_file', '=', $tree->id())
+                    DB::query(table: 'families')
+                        ->whereEqual('f_husb', $old_xref)
+                        ->whereEqual('f_file', $tree->id())
                         ->update([
                             'f_husb'   => $new_xref,
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, ' HUSB @$old_xref@', ' HUSB @$new_xref@')"),
+                            'f_gedcom' => DB::replace('f_gedcom', " HUSB @$old_xref@", " HUSB @$new_xref@"),
                         ]);
 
-                    DB::table('families')
-                        ->where('f_wife', '=', $old_xref)
-                        ->where('f_file', '=', $tree->id())
+                    DB::query(table: 'families')
+                        ->whereEqual('f_wife', $old_xref)
+                        ->whereEqual('f_file', $tree->id())
                         ->update([
                             'f_wife'   => $new_xref,
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, ' WIFE @$old_xref@', ' WIFE @$new_xref@')"),
+                            'f_gedcom' => DB::replace('f_gedcom', " WIFE @$old_xref@", " WIFE @$new_xref@"),
                         ]);
 
                     // Other links from families to individuals
                     foreach (['CHIL', 'ASSO', '_ASSO'] as $tag) {
-                        DB::table('families')
-                            ->join('link', static function (JoinClause $join): void {
-                                $join
-                                    ->on('l_file', '=', 'f_file')
-                                    ->on('l_from', '=', 'f_id');
-                            })
-                            ->where('l_to', '=', $old_xref)
-                            ->where('l_type', '=', $tag)
-                            ->where('f_file', '=', $tree->id())
+                        DB::query(table: 'families')
+                            ->join('link', ['l_file' => 'f_file', 'l_from' => 'f_id'])
+                            ->whereEqual('l_to', $old_xref)
+                            ->whereEqual('l_type', $tag)
+                            ->whereEqual('f_file', $tree->id())
                             ->update([
-                                'f_gedcom' => new Expression("REPLACE(f_gedcom, ' $tag @$old_xref@', ' $tag @$new_xref@')"),
+                                'f_gedcom' => DB::replace('f_gedcom', " $tag @$old_xref@", " $tag @$new_xref@"),
                             ]);
                     }
 
                     // Links from individuals to individuals
                     foreach (['ALIA', 'ASSO', '_ASSO'] as $tag) {
-                        DB::table('individuals')
-                            ->join('link', static function (JoinClause $join): void {
-                                $join
-                                    ->on('l_file', '=', 'i_file')
-                                    ->on('l_from', '=', 'i_id');
-                            })
-                            ->where('link.l_to', '=', $old_xref)
-                            ->where('link.l_type', '=', $tag)
-                            ->where('i_file', '=', $tree->id())
+                        DB::query(table: 'individuals')
+                            ->join('link', ['l_file' => 'i_file', 'l_from' => 'i_id'])
+                            ->whereEqual('l_to', $old_xref)
+                            ->whereEqual('l_type', $tag)
+                            ->whereEqual('i_file', $tree->id())
                             ->update([
-                                'i_gedcom' => new Expression("REPLACE(i_gedcom, ' $tag @$old_xref@', ' $tag @$new_xref@')"),
+                                'i_gedcom' => DB::replace('i_gedcom', " $tag @$old_xref@", " $tag @$new_xref@"),
                             ]);
                     }
 
-                    DB::table('placelinks')
-                        ->where('pl_file', '=', $tree->id())
-                        ->where('pl_gid', '=', $old_xref)
+                    DB::query(table: 'placelinks')
+                        ->whereEqual('pl_file', $tree->id())
+                        ->whereEqual('pl_gid', $old_xref)
                         ->update([
                             'pl_gid' => $new_xref,
                         ]);
 
-                    DB::table('dates')
-                        ->where('d_file', '=', $tree->id())
-                        ->where('d_gid', '=', $old_xref)
+                    DB::query(table: 'dates')
+                        ->whereEqual('d_file', $tree->id())
+                        ->whereEqual('d_gid', $old_xref)
                         ->update([
                             'd_gid' => $new_xref,
                         ]);
 
-                    DB::table('user_gedcom_setting')
-                        ->where('gedcom_id', '=', $tree->id())
-                        ->where('setting_value', '=', $old_xref)
+                    DB::query(table: 'user_gedcom_setting')
+                        ->whereEqual('gedcom_id', $tree->id())
+                        ->whereEqual('setting_value', $old_xref)
                         ->whereIn('setting_name', [UserInterface::PREF_TREE_ACCOUNT_XREF, UserInterface::PREF_TREE_DEFAULT_XREF])
                         ->update([
                             'setting_value' => $new_xref,
@@ -176,391 +168,311 @@ final class RenumberTree
                     break;
 
                 case Family::RECORD_TYPE:
-                    DB::table('families')
-                        ->where('f_file', '=', $tree->id())
-                        ->where('f_id', '=', $old_xref)
+                    DB::query(table: 'families')
+                        ->whereEqual('f_file', $tree->id())
+                        ->whereEqual('f_id', $old_xref)
                         ->update([
                             'f_id'     => $new_xref,
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, '0 @$old_xref@ FAM', '0 @$new_xref@ FAM')"),
+                            'f_gedcom' => DB::replace('f_gedcom', "0 @$old_xref@ FAM", "0 @$new_xref@ FAM"),
                         ]);
 
                     // Links from individuals to families
                     foreach (['FAMC', 'FAMS'] as $tag) {
-                        DB::table('individuals')
-                            ->join('link', static function (JoinClause $join): void {
-                                $join
-                                    ->on('l_file', '=', 'i_file')
-                                    ->on('l_from', '=', 'i_id');
-                            })
-                            ->where('l_to', '=', $old_xref)
-                            ->where('l_type', '=', $tag)
-                            ->where('i_file', '=', $tree->id())
+                        DB::query(table: 'individuals')
+                            ->join('link', ['l_file' => 'i_file', 'l_from' => 'i_id'])
+                            ->whereEqual('l_to', $old_xref)
+                            ->whereEqual('l_type', $tag)
+                            ->whereEqual('i_file', $tree->id())
                             ->update([
-                                'i_gedcom' => new Expression("REPLACE(i_gedcom, ' $tag @$old_xref@', ' $tag @$new_xref@')"),
+                                'i_gedcom' => DB::replace('i_gedcom', " $tag @$old_xref@", " $tag @$new_xref@"),
                             ]);
                     }
 
-                    DB::table('placelinks')
-                        ->where('pl_file', '=', $tree->id())
-                        ->where('pl_gid', '=', $old_xref)
+                    DB::query(table: 'placelinks')
+                        ->whereEqual('pl_file', $tree->id())
+                        ->whereEqual('pl_gid', $old_xref)
                         ->update([
                             'pl_gid' => $new_xref,
                         ]);
 
-                    DB::table('dates')
-                        ->where('d_file', '=', $tree->id())
-                        ->where('d_gid', '=', $old_xref)
+                    DB::query(table: 'dates')
+                        ->whereEqual('d_file', $tree->id())
+                        ->whereEqual('d_gid', $old_xref)
                         ->update([
                             'd_gid' => $new_xref,
                         ]);
                     break;
 
                 case Source::RECORD_TYPE:
-                    DB::table('sources')
-                        ->where('s_file', '=', $tree->id())
-                        ->where('s_id', '=', $old_xref)
+                    DB::query(table: 'sources')
+                        ->whereEqual('s_file', $tree->id())
+                        ->whereEqual('s_id', $old_xref)
                         ->update([
                             's_id'     => $new_xref,
-                            's_gedcom' => new Expression("REPLACE(s_gedcom, '0 @$old_xref@ SOUR', '0 @$new_xref@ SOUR')"),
+                            's_gedcom' => DB::replace('s_gedcom', "0 @$old_xref@ SOUR", "0 @$new_xref@ SOUR"),
                         ]);
 
-                    DB::table('individuals')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'i_file')
-                                ->on('l_from', '=', 'i_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'SOUR')
-                        ->where('i_file', '=', $tree->id())
+                    DB::query(table: 'individuals')
+                        ->join('link', ['l_file' => 'i_file', 'l_from' => 'i_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'SOUR')
+                        ->whereEqual('i_file', $tree->id())
                         ->update([
-                            'i_gedcom' => new Expression("REPLACE(i_gedcom, ' SOUR @$old_xref@', ' SOUR @$new_xref@')"),
+                            'i_gedcom' => DB::replace('i_gedcom', " SOUR @$old_xref@", " SOUR @$new_xref@"),
                         ]);
 
-                    DB::table('families')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'f_file')
-                                ->on('l_from', '=', 'f_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'SOUR')
-                        ->where('f_file', '=', $tree->id())
+                    DB::query(table: 'families')
+                        ->join('link', ['l_file' => 'f_file', 'l_from' => 'f_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'SOUR')
+                        ->whereEqual('f_file', $tree->id())
                         ->update([
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, ' SOUR @$old_xref@', ' SOUR @$new_xref@')"),
+                            'f_gedcom' => DB::replace('f_gedcom', " SOUR @$old_xref@", " SOUR @$new_xref@"),
                         ]);
 
-                    DB::table('media')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'm_file')
-                                ->on('l_from', '=', 'm_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'SOUR')
-                        ->where('m_file', '=', $tree->id())
+                    DB::query(table: 'media')
+                        ->join('link', ['l_file' => 'm_file', 'l_from' => 'm_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'SOUR')
+                        ->whereEqual('m_file', $tree->id())
                         ->update([
-                            'm_gedcom' => new Expression("REPLACE(m_gedcom, ' SOUR @$old_xref@', ' SOUR @$new_xref@')"),
+                            'm_gedcom' => DB::replace('m_gedcom', " SOUR @$old_xref@", " SOUR @$new_xref@"),
                         ]);
 
-                    DB::table('other')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'o_file')
-                                ->on('l_from', '=', 'o_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'SOUR')
-                        ->where('o_file', '=', $tree->id())
+                    DB::query(table: 'other')
+                        ->join('link', ['l_file' => 'o_file', 'l_from' => 'o_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'SOUR')
+                        ->whereEqual('o_file', $tree->id())
                         ->update([
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, ' SOUR @$old_xref@', ' SOUR @$new_xref@')"),
+                            'o_gedcom' => DB::replace('o_gedcom', " SOUR @$old_xref@", " SOUR @$new_xref@"),
                         ]);
                     break;
 
                 case Repository::RECORD_TYPE:
-                    DB::table('other')
-                        ->where('o_file', '=', $tree->id())
-                        ->where('o_id', '=', $old_xref)
-                        ->where('o_type', '=', 'REPO')
+                    DB::query(table: 'other')
+                        ->whereEqual('o_file', $tree->id())
+                        ->whereEqual('o_id', $old_xref)
+                        ->whereEqual('o_type', 'REPO')
                         ->update([
                             'o_id'     => $new_xref,
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, '0 @$old_xref@ REPO', '0 @$new_xref@ REPO')"),
+                            'o_gedcom' => DB::replace('o_gedcom', "0 @$old_xref@ REPO", "0 @$new_xref@ REPO"),
                         ]);
 
-                    DB::table('sources')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 's_file')
-                                ->on('l_from', '=', 's_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'REPO')
-                        ->where('s_file', '=', $tree->id())
+                    DB::query(table: 'sources')
+                        ->join('link', ['l_file' => 's_file', 'l_from' => 's_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'REPO')
+                        ->whereEqual('s_file', $tree->id())
                         ->update([
-                            's_gedcom' => new Expression("REPLACE(s_gedcom, ' REPO @$old_xref@', ' REPO @$new_xref@')"),
+                            's_gedcom' => DB::replace('s_gedcom', " REPO @$old_xref@", " REPO @$new_xref@"),
                         ]);
                     break;
 
                 case Note::RECORD_TYPE:
-                    DB::table('other')
-                        ->where('o_file', '=', $tree->id())
-                        ->where('o_id', '=', $old_xref)
-                        ->where('o_type', '=', 'NOTE')
+                    DB::query(table: 'other')
+                        ->whereEqual('o_file', $tree->id())
+                        ->whereEqual('o_id', $old_xref)
+                        ->whereEqual('o_type', 'NOTE')
                         ->update([
                             'o_id'     => $new_xref,
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, '0 @$old_xref@ NOTE', '0 @$new_xref@ NOTE')"),
+                            'o_gedcom' => DB::replace('o_gedcom', "0 @$old_xref@ NOTE", "0 @$new_xref@ NOTE"),
                         ]);
 
-                    DB::table('individuals')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'i_file')
-                                ->on('l_from', '=', 'i_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'NOTE')
-                        ->where('i_file', '=', $tree->id())
+                    DB::query(table: 'individuals')
+                        ->join('link', ['l_file' => 'i_file', 'l_from' => 'i_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'NOTE')
+                        ->whereEqual('i_file', $tree->id())
                         ->update([
-                            'i_gedcom' => new Expression("REPLACE(i_gedcom, ' NOTE @$old_xref@', ' NOTE @$new_xref@')"),
+                            'i_gedcom' => DB::replace('i_gedcom', " NOTE @$old_xref@", " NOTE @$new_xref@"),
                         ]);
 
-                    DB::table('families')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'f_file')
-                                ->on('l_from', '=', 'f_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'NOTE')
-                        ->where('f_file', '=', $tree->id())
+                    DB::query(table: 'families')
+                        ->join('link', ['l_file' => 'f_file', 'l_from' => 'f_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'NOTE')
+                        ->whereEqual('f_file', $tree->id())
                         ->update([
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, ' NOTE @$old_xref@', ' NOTE @$new_xref@')"),
+                            'f_gedcom' => DB::replace('i_gedcom', " NOTE @$old_xref@", " NOTE @$new_xref@"),
                         ]);
 
-                    DB::table('media')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'm_file')
-                                ->on('l_from', '=', 'm_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'NOTE')
-                        ->where('m_file', '=', $tree->id())
+                    DB::query(table: 'media')
+                        ->join('link', ['l_file' => 'm_file', 'l_from' => 'm_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'NOTE')
+                        ->whereEqual('m_file', $tree->id())
                         ->update([
-                            'm_gedcom' => new Expression("REPLACE(m_gedcom, ' NOTE @$old_xref@', ' NOTE @$new_xref@')"),
+                            'm_gedcom' => DB::replace('m_gedcom', " NOTE @$old_xref@", " NOTE @$new_xref@"),
                         ]);
 
-                    DB::table('sources')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 's_file')
-                                ->on('l_from', '=', 's_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'NOTE')
-                        ->where('s_file', '=', $tree->id())
+                    DB::query(table: 'sources')
+                        ->join('link', ['l_file' => 's_file', 'l_from' => 's_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'NOTE')
+                        ->whereEqual('s_file', $tree->id())
                         ->update([
-                            's_gedcom' => new Expression("REPLACE(s_gedcom, ' NOTE @$old_xref@', ' NOTE @$new_xref@')"),
+                            's_gedcom' => DB::replace('s_gedcom', " NOTE @$old_xref@", " NOTE @$new_xref@"),
                         ]);
 
-                    DB::table('other')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'o_file')
-                                ->on('l_from', '=', 'o_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'NOTE')
-                        ->where('o_file', '=', $tree->id())
+                    DB::query(table: 'other')
+                        ->join('link', ['l_file' => 'o_file', 'l_from' => 'o_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'NOTE')
+                        ->whereEqual('o_file', $tree->id())
                         ->update([
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, ' NOTE @$old_xref@', ' NOTE @$new_xref@')"),
+                            'o_gedcom' => DB::replace('o_gedcom', " NOTE @$old_xref@", " NOTE @$new_xref@"),
                         ]);
                     break;
 
                 case Media::RECORD_TYPE:
-                    DB::table('media')
-                        ->where('m_file', '=', $tree->id())
-                        ->where('m_id', '=', $old_xref)
+                    DB::query(table: 'media')
+                        ->whereEqual('m_file', $tree->id())
+                        ->whereEqual('m_id', $old_xref)
                         ->update([
                             'm_id'     => $new_xref,
-                            'm_gedcom' => new Expression("REPLACE(m_gedcom, '0 @$old_xref@ OBJE', '0 @$new_xref@ OBJE')"),
+                            'm_gedcom' => DB::replace('m_gedcom', "0 @$old_xref@ OBJE", "0 @$new_xref@ OBJE"),
                         ]);
 
-                    DB::table('media_file')
-                        ->where('m_file', '=', $tree->id())
-                        ->where('m_id', '=', $old_xref)
+                    DB::query(table: 'media_file')
+                        ->whereEqual('m_file', $tree->id())
+                        ->whereEqual('m_id', $old_xref)
                         ->update([
                             'm_id' => $new_xref,
                         ]);
 
-                    DB::table('individuals')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'i_file')
-                                ->on('l_from', '=', 'i_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'OBJE')
-                        ->where('i_file', '=', $tree->id())
+                    DB::query(table: 'individuals')
+                        ->join('link', ['l_file' => 'i_file', 'l_from' => 'i_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'OBJE')
+                        ->whereEqual('i_file', $tree->id())
                         ->update([
-                            'i_gedcom' => new Expression("REPLACE(i_gedcom, ' OBJE @$old_xref@', ' OBJE @$new_xref@')"),
+                            'i_gedcom' => DB::replace('i_gedcom', " OBJE @$old_xref@", " OBJE @$new_xref@"),
                         ]);
 
-                    DB::table('families')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'f_file')
-                                ->on('l_from', '=', 'f_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'OBJE')
-                        ->where('f_file', '=', $tree->id())
+                    DB::query(table: 'families')
+                        ->join('link', ['l_file' => 'f_file', 'l_from' => 'f_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'OBJE')
+                        ->whereEqual('f_file', $tree->id())
                         ->update([
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, ' OBJE @$old_xref@', ' OBJE @$new_xref@')"),
+                            'f_gedcom' => DB::replace('f_gedcom', " OBJE @$old_xref@", " OBJE @$new_xref@"),
                         ]);
 
-                    DB::table('sources')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 's_file')
-                                ->on('l_from', '=', 's_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'OBJE')
-                        ->where('s_file', '=', $tree->id())
+                    DB::query(table: 'sources')
+                        ->join('link', ['l_file' => 's_file', 'l_from' => 's_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'OBJE')
+                        ->whereEqual('s_file', $tree->id())
                         ->update([
-                            's_gedcom' => new Expression("REPLACE(s_gedcom, ' OBJE @$old_xref@', ' OBJE @$new_xref@')"),
+                            's_gedcom' => DB::replace('s_gedcom', " OBJE @$old_xref@", " OBJE @$new_xref@"),
                         ]);
 
-                    DB::table('other')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'o_file')
-                                ->on('l_from', '=', 'o_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', 'OBJE')
-                        ->where('o_file', '=', $tree->id())
+                    DB::query(table: 'other')
+                        ->join('link', ['l_file' => 'o_file', 'l_from' => 'o_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', 'OBJE')
+                        ->whereEqual('o_file', $tree->id())
                         ->update([
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, ' OBJE @$old_xref@', ' OBJE @$new_xref@')"),
+                            'o_gedcom' => DB::replace('o_gedcom', " OBJE @$old_xref@", " OBJE @$new_xref@"),
                         ]);
                     break;
 
                 default:
-                    DB::table('other')
-                        ->where('o_file', '=', $tree->id())
-                        ->where('o_id', '=', $old_xref)
-                        ->where('o_type', '=', $type)
+                    DB::query(table: 'other')
+                        ->whereEqual('o_file', $tree->id())
+                        ->whereEqual('o_id', $old_xref)
+                        ->whereEqual('o_type', $type)
                         ->update([
                             'o_id'     => $new_xref,
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, '0 @$old_xref@ $type', '0 @$new_xref@ $type')"),
+                            'o_gedcom' => DB::replace('o_gedcom', "0 @$old_xref@ $type", "0 @$new_xref@ $type"),
                         ]);
 
-                    DB::table('individuals')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'i_file')
-                                ->on('l_from', '=', 'i_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', $type)
-                        ->where('i_file', '=', $tree->id())
+                    DB::query(table: 'individuals')
+                        ->join('link', ['l_file' => 'i_file', 'l_from' => 'i_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', $type)
+                        ->whereEqual('i_file', $tree->id())
                         ->update([
-                            'i_gedcom' => new Expression("REPLACE(i_gedcom, ' $type @$old_xref@', ' $type @$new_xref@')"),
+                            'i_gedcom' => DB::replace('i_gedcom', " $type @$old_xref@", " $type @$new_xref@"),
                         ]);
 
-                    DB::table('families')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'f_file')
-                                ->on('l_from', '=', 'f_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', $type)
-                        ->where('f_file', '=', $tree->id())
+                    DB::query(table: 'families')
+                        ->join('link', ['l_file' => 'f_file', 'l_from' => 'f_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', $type)
+                        ->whereEqual('f_file', $tree->id())
                         ->update([
-                            'f_gedcom' => new Expression("REPLACE(f_gedcom, ' $type @$old_xref@', ' $type @$new_xref@')"),
+                            'f_gedcom' => DB::replace('f_gedcom', " $type @$old_xref@", " $type @$new_xref@"),
                         ]);
 
-                    DB::table('media')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'm_file')
-                                ->on('l_from', '=', 'm_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', $type)
-                        ->where('m_file', '=', $tree->id())
+                    DB::query(table: 'media')
+                        ->join('link', ['l_file' => 'm_file', 'l_from' => 'm_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', $type)
+                        ->whereEqual('m_file', $tree->id())
                         ->update([
-                            'm_gedcom' => new Expression("REPLACE(m_gedcom, ' $type @$old_xref@', ' $type @$new_xref@')"),
+                            'm_gedcom' => DB::replace('m_gedcom', " $type @$old_xref@", " $type @$new_xref@"),
                         ]);
 
-                    DB::table('sources')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 's_file')
-                                ->on('l_from', '=', 's_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', $type)
-                        ->where('s_file', '=', $tree->id())
+                    DB::query(table: 'sources')
+                        ->join('link', ['l_file' => 's_file', 'l_from' => 's_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', $type)
+                        ->whereEqual('s_file', $tree->id())
                         ->update([
-                            's_gedcom' => new Expression("REPLACE(s_gedcom, ' $type @$old_xref@', ' $type @$new_xref@')"),
+                            's_gedcom' => DB::replace('s_gedcom', " $type @$old_xref@", " $type @$new_xref@"),
                         ]);
 
-                    DB::table('other')
-                        ->join('link', static function (JoinClause $join): void {
-                            $join
-                                ->on('l_file', '=', 'o_file')
-                                ->on('l_from', '=', 'o_id');
-                        })
-                        ->where('l_to', '=', $old_xref)
-                        ->where('l_type', '=', $type)
-                        ->where('o_file', '=', $tree->id())
+                    DB::query(table: 'other')
+                        ->join('link', ['l_file' => 'o_file', 'l_from' => 'o_id'])
+                        ->whereEqual('l_to', $old_xref)
+                        ->whereEqual('l_type', $type)
+                        ->whereEqual('o_file', $tree->id())
                         ->update([
-                            'o_gedcom' => new Expression("REPLACE(o_gedcom, ' $type @$old_xref@', ' $type @$new_xref@')"),
+                            'o_gedcom' => DB::replace('o_gedcom', " $type @$old_xref@", " $type @$new_xref@"),
                         ]);
                     break;
             }
 
-            DB::table('name')
-                ->where('n_file', '=', $tree->id())
-                ->where('n_id', '=', $old_xref)
+            DB::query(table: 'name')
+                ->whereEqual('n_file', $tree->id())
+                ->whereEqual('n_id', $old_xref)
                 ->update([
                     'n_id' => $new_xref,
                 ]);
 
-            DB::table('default_resn')
-                ->where('gedcom_id', '=', $tree->id())
-                ->where('xref', '=', $old_xref)
+            DB::query(table: 'default_resn')
+                ->whereEqual('gedcom_id', $tree->id())
+                ->whereEqual('xref', $old_xref)
                 ->update([
                     'xref' => $new_xref,
                 ]);
 
-            DB::table('hit_counter')
-                ->where('gedcom_id', '=', $tree->id())
-                ->where('page_parameter', '=', $old_xref)
+            DB::query(table: 'hit_counter')
+                ->whereEqual('gedcom_id', $tree->id())
+                ->whereEqual('page_parameter', $old_xref)
                 ->update([
                     'page_parameter' => $new_xref,
                 ]);
 
-            DB::table('link')
-                ->where('l_file', '=', $tree->id())
-                ->where('l_from', '=', $old_xref)
+            DB::query(table: 'link')
+                ->whereEqual('l_file', $tree->id())
+                ->whereEqual('l_from', $old_xref)
                 ->update([
                     'l_from' => $new_xref,
                 ]);
 
-            DB::table('link')
-                ->where('l_file', '=', $tree->id())
-                ->where('l_to', '=', $old_xref)
+            DB::query(table: 'link')
+                ->whereEqual('l_file', $tree->id())
+                ->whereEqual('l_to', $old_xref)
                 ->update([
                     'l_to' => $new_xref,
                 ]);
 
-            DB::table('favorite')
-                ->where('gedcom_id', '=', $tree->id())
-                ->where('xref', '=', $old_xref)
+            DB::query(table: 'favorite')
+                ->whereEqual('gedcom_id', $tree->id())
+                ->whereEqual('xref', $old_xref)
                 ->update([
                     'xref' => $new_xref,
                 ]);
